@@ -93,7 +93,7 @@ def _find_root(G: nx.Graph):
 ########################################################################################
 
 
-def to_swc_graph(fname: str, num_lines: int = None) -> nx.DiGraph:
+def to_swc_graph(fname: str, num_lines: Optional[int] = None, xyz_scale = None) -> nx.DiGraph:
     """Read a SWC file and return a SWC graph via networkX.
 
     The graph is read such that each entry in the swc file becomes a graph node
@@ -104,6 +104,7 @@ def to_swc_graph(fname: str, num_lines: int = None) -> nx.DiGraph:
     Args:
         fname: Path to the swc file.
         num_lines: Number of lines to read from the file. If None, all lines are read.
+        xyz_scale: Length-3 tuple or list for x, y, z scaling. If None, no scale is applied.
 
     Returns:
         A networkx graph of the traced morphology in the swc file. It has attributes:
@@ -118,12 +119,16 @@ def to_swc_graph(fname: str, num_lines: int = None) -> nx.DiGraph:
         from jaxley.io.graph to_swc_graph
         swc_graph = to_swc_graph("path_to_swc.swc")
     """
+    if xyz_scale is None:
+        xyz_scale = [1, 1, 1]
+    
     i_id_xyzr_p = np.loadtxt(fname)[:num_lines]
 
     graph = nx.DiGraph()
     graph.add_nodes_from(
         (
-            (int(i), {"id": int(id), "x": x, "y": y, "z": z, "r": r, "p": int(p)})
+            (int(i), {"id": int(id), "x": x*xyz_scale[0], "y": y*xyz_scale[1],
+                      "z": z*xyz_scale[2], "r": r, "p": int(p)})
             for i, id, x, y, z, r, p in i_id_xyzr_p
         )
     )
